@@ -20,8 +20,8 @@ from collections import defaultdict
 from functools import reduce
 
 # Global var of factor path
-factorPath = shutil.which('factor') \
-             or shutil.which('gfactor')
+factorPath = shutil.which('factor') #\
+#             or shutil.which('gfactor')
 
 # Optimisations or different sieves could be used
 def nextPrime(upto):
@@ -81,8 +81,9 @@ def factorize(n):
     return factors # Empty dict - nothing to iterate through
 
   # Factor path global - run once
+  print(factorPath)
   if factorPath != None:
-    res = subprocess.run(["gfactor", str(n)], stdout=subprocess.PIPE, universal_newlines=True)
+    res = subprocess.run(["factor", str(n)], stdout=subprocess.PIPE, universal_newlines=True)
     # ignore first numer - the dividend
     factors = map( int, res.stdout.split()[1:] )
     return defaultdict(int, Counter(factors))
