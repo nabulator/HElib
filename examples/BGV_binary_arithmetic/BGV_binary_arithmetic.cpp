@@ -20,6 +20,8 @@
 #include <helib/binaryArith.h>
 #include <helib/intraSlot.h>
 
+#include <time.h>
+
 int main(int argc, char* argv[])
 {
   /*  Example of binary arithmetic using the BGV scheme  */
@@ -60,11 +62,16 @@ int main(int argc, char* argv[])
   std::cout << "\n*********************************************************";
   std::cout << std::endl;
 
+    clock_t tStart = clock();
+
   std::cout << "Initialising context object..." << std::endl;
   // Initialize the context.
   // This object will hold information about the algebra created from the
   // previously set parameters.
   helib::Context context(m, p, r, gens, ords);
+
+  std::cout << (double)(clock() - tStart)/CLOCKS_PER_SEC << "\n";
+     tStart = clock();
 
   // Modify the context, adding primes to the modulus chain.
   // This defines the ciphertext space.
@@ -78,6 +85,9 @@ int main(int argc, char* argv[])
   context.makeBootstrappable(
       helib::convert<NTL::Vec<long>, std::vector<long>>(mvec));
 
+  std::cout << (double)(clock() - tStart)/CLOCKS_PER_SEC << "\n";
+
+
   // Print the context.
   context.zMStar.printout();
   std::cout << std::endl;
@@ -87,6 +97,9 @@ int main(int argc, char* argv[])
 
   // Secret key management.
   std::cout << "Creating secret key..." << std::endl;
+
+     tStart = clock();
+
   // Create a secret key associated with the context.
   helib::SecKey secret_key(context);
   // Generate the secret key.
@@ -105,6 +118,9 @@ int main(int argc, char* argv[])
   // Build the unpack slot encoding.
   std::vector<helib::zzX> unpackSlotEncoding;
   buildUnpackSlotEncoding(unpackSlotEncoding, ea);
+
+
+  std::cout << (double)(clock() - tStart)/CLOCKS_PER_SEC << "\n";
 
   // Get the number of slot (phi(m)).
   long nslots = ea.size();
@@ -144,6 +160,7 @@ int main(int argc, char* argv[])
   std::cout << "b = " << b_data << std::endl;
   std::cout << "c = " << c_data << std::endl;
 
+     tStart = clock();
   // Use a scratch ciphertext to populate vectors.
   helib::Ctxt scratch(public_key);
   std::vector<helib::Ctxt> encrypted_a(bitSize, scratch);
@@ -166,6 +183,9 @@ int main(int argc, char* argv[])
     ea.encrypt(encrypted_c[i], public_key, c_vec);
   }
 
+
+  std::cout << (double)(clock() - tStart)/CLOCKS_PER_SEC << "\n";
+
   // Although in general binary numbers are represented here as
   // std::vector<helib::Ctxt> the binaryArith APIs for HElib use the PtrVector
   // wrappers instead, e.g. helib::CtPtrs_vectorCt. These are nothing more than
@@ -178,6 +198,8 @@ int main(int argc, char* argv[])
   // encrypted binary numbers.
 
   // Perform the multiplication first and put it in encrypted_product.
+
+     tStart = clock();
   std::vector<helib::Ctxt> encrypted_product;
   helib::CtPtrs_vectorCt product_wrapper(encrypted_product);
   helib::multTwoNumbers(
@@ -188,6 +210,10 @@ int main(int argc, char* argv[])
                                    // than 2's complement.
       outSize, // Outsize is the limit on the number of bits in the output.
       &unpackSlotEncoding); // Information needed for bootstrapping.
+
+
+std::cout << (double)(clock() - tStart)/CLOCKS_PER_SEC << "\n";
+     tStart = clock();
 
   // Now perform the encrypted sum and put it in encrypted_result.
   std::vector<helib::Ctxt> encrypted_result;
@@ -200,14 +226,22 @@ int main(int argc, char* argv[])
                           // complement.
       &unpackSlotEncoding); // Information needed for bootstrapping.
 
+std::cout << (double)(clock() - tStart)/CLOCKS_PER_SEC << "\n";
+     tStart = clock();
+
   // Decrypt and print the result.
   std::vector<long> decrypted_result;
   helib::decryptBinaryNums(decrypted_result, result_wrapper, secret_key, ea);
+  
+std::cout << (double)(clock() - tStart)/CLOCKS_PER_SEC << "\n";
+
   std::cout << "a*b+c = " << decrypted_result.back() << std::endl;
 
   // Now calculate the sum of a, b and c using the addManyNumbers function.
   encrypted_result.clear();
   decrypted_result.clear();
+
+     tStart = clock();
   std::vector<std::vector<helib::Ctxt>> summands = {encrypted_a,
                                                     encrypted_b,
                                                     encrypted_c};
@@ -219,7 +253,14 @@ int main(int argc, char* argv[])
       &unpackSlotEncoding); // Information needed for bootstrapping.
 
   // Decrypt and print the result.
+ 
+std::cout << (double)(clock() - tStart)/CLOCKS_PER_SEC << "\n";
+     tStart = clock();
+
   helib::decryptBinaryNums(decrypted_result, result_wrapper, secret_key, ea);
+
+std::cout << (double)(clock() - tStart)/CLOCKS_PER_SEC << "\n";
+
   std::cout << "a+b+c = " << decrypted_result.back() << std::endl;
 
   // This section calculates popcnt(a) using the fifteenOrLess4Four
@@ -228,12 +269,20 @@ int main(int argc, char* argv[])
   // because 4 bits are required to represent numbers in [0,15].
   encrypted_result.resize(4lu, scratch);
   decrypted_result.clear();
+
+     tStart = clock();
+
   encrypted_a.pop_back(); // drop the MSB since we only support up to 15 bits.
   helib::fifteenOrLess4Four(result_wrapper,
                             helib::CtPtrs_vectorCt(encrypted_a));
 
+std::cout << (double)(clock() - tStart)/CLOCKS_PER_SEC << "\n";
+     tStart = clock();
+
   // Decrypt and print the result.
   helib::decryptBinaryNums(decrypted_result, result_wrapper, secret_key, ea);
+ 
+std::cout << (double)(clock() - tStart)/CLOCKS_PER_SEC << "\n";
   std::cout << "popcnt(a) = " << decrypted_result.back() << std::endl;
 
   return 0;

@@ -24,9 +24,9 @@ int main(int argc, char* argv[])
   /*  Example of BGV scheme  */
 
   // Plaintext prime modulus
-  unsigned long p = 4999;
+  unsigned long p = 5;//4999;
   // Cyclotomic polynomial - defines phi(m)
-  unsigned long m = 32109;
+  unsigned long m = 208;//32109;
   // Hensel lifting (default = 1)
   unsigned long r = 1;
   // Number of bits of the modulus chain
